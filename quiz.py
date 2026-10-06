@@ -120,7 +120,7 @@ class Quiz:
         wrong_answers_file = self.__init_answers_file()
         wrapper = textwrap.TextWrapper()  # wrap text so it looks better
         
-        print("Your quiz starts now. Please enter one single character, coresponding to the answers (A,B,C or D). Answers are NOT case sensitive, so response 'b' is good if 'B' is the correct answer.\n")
+        print("Your quiz starts now. Please enter one or more answer letters, corresponding to the answers (A, B, C, D). Answers are NOT case sensitive, so response 'b' is good if 'B' is the correct answer. For multiple-choice questions, enter the letters together (for example: AD).\n")
         input("Press Enter to continue..")
 
         for index, card in enumerate(self.quiz_cards):
@@ -131,11 +131,21 @@ class Quiz:
             for ans in card.answers:
                 print(wrapper.fill(text= ans))
             print("-" * 40)
-            your_answer = ""
-            while your_answer.upper() not in ['A', 'B', 'C', 'D']:
-                your_answer = input("Your answer: ")
 
-            if your_answer.upper() == card.correct_answer:
+            while True:
+                your_answer = input("Your answer: ").strip()
+                if not your_answer:
+                    print("Empty answer is not valid. Please enter one or more letters from A, B, C, or D.")
+                    continue
+
+                normalized = "".join(ch for ch in your_answer.upper() if ch.isalpha())
+                if normalized and set(normalized) <= set("ABCD"):
+                    your_answer = "".join(sorted(set(normalized)))
+                    break
+                print("Please enter one or more valid answer letters from A, B, C, D. No spaces.")
+
+            normalized_correct = "".join(sorted(set(card.correct_answer.upper())))
+            if your_answer == normalized_correct:
                 correct_answers += 1
             else:
                 # write to the wrong answer to the file

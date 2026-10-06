@@ -6,3 +6,4 @@ if __name__ == "__main__":
     quiz = Quiz(RES_DIR)
 
     quiz.start_quiz()
+    

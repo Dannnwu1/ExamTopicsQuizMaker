@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ExamTopics Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="card app-shell">
+        <h1>ExamTopics Quiz</h1>
+        <p class="subtitle">Study without staring at the terminal.</p>
+
+        <form method="post" action="{{ url_for('start_quiz') }}" class="setup-form">
+          <label for="question_count">How many questions?</label>
+          <input
+            id="question_count"
+            name="question_count"
+            type="number"
+            min="1"
+            max="{{ total_questions }}"
+            value="{{ total_questions }}"
+            required
+          />
+
+          <label for="show_immediately">
+            Show the correct answer immediately after each question?
+          </label>
+          <select id="show_immediately" name="show_immediately">
+            <option value="y">Yes</option>
+            <option value="n">No</option>
+          </select>
+
+          <button type="submit">Start quiz</button>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

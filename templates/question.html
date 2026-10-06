@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Question {{ index }} of {{ total }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="card question-card">
+        <div class="question-header">
+          <span class="badge">Question {{ index }} / {{ total }}</span>
+          <span class="question-number">{{ card.question_number }}</span>
+        </div>
+
+        <h2>{{ card.question }}</h2>
+
+        {% if last_result %}
+          <div class="result-banner {% if last_result.correct %}success{% else %}error{% endif %}">
+            {% if last_result.correct %}
+              Correct! Nice one.
+            {% else %}
+              Not quite. Your answer: {{ last_result.submitted }}
+            {% endif %}
+
+            {% if show_answer_immediately %}
+              <span>Correct answer: {{ last_result.correct_answer }}</span>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        {% if index > 1 %}
+          <form method="post" action="{{ url_for('quiz') }}" class="inline-form">
+            <button type="submit" name="action" value="prev">Previous question</button>
+          </form>
+        {% endif %}
+
+        {% if last_result %}
+          <div class="actions">
+            {% if index < total %}
+              <form method="post" action="{{ url_for('quiz') }}" class="inline-form">
+                <button type="submit" name="action" value="next">Next question</button>
+              </form>
+            {% else %}
+              <a class="button-link" href="{{ url_for('results') }}">See results</a>
+            {% endif %}
+          </div>
+        {% else %}
+          <form method="post" action="{{ url_for('quiz') }}">
+            <div class="answers">
+              {% for answer in card.answers %}
+                {% set letter = 'ABCD'[loop.index0] %}
+                <label class="answer-option">
+                  <input type="checkbox" name="answer" value="{{ letter }}" />
+                  <span class="choice-letter">{{ letter }}</span>
+                  <span>{{ answer }}</span>
+                </label>
+              {% endfor %}
+            </div>
+
+            <div class="actions">
+              <button type="submit">Submit answer</button>
+            </div>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>

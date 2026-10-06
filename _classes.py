@@ -133,32 +133,46 @@ class CardList:
         """ 
         Returns the correct answer from a card.
 
-        As the "correct answer" stated by ExamTopics is usually wrong,
-        the metric that is used here is to get the most popular (first) 
-        answer from the progress bar (Community vote distribution bar)
-
-        It appears that some questions (ex. #40) do not show the progress
-        bar after clicking reveal, but somehow the tag is still there,
-        even though I cannot see it.
-
-        ! WARN: 
-        Some (many) questions do not have a most voted answer as the
-        correct answer is actually the one selected by ExamTopics.
-        As such, to mitigate the issue, we use the fact that every Card
-        has tag <p class="card-text question-answer bg-light white-text">.
-        If it doesn't have "vote-bar progress-bar bg-primary", we'll
-        default to the primary answer.
+        The HTML used by ExamTopics stores the correct option(s) directly on
+        each choice list item using a `data-correct...` marker. Some older
+        versions also expose the answer in a `question-answer` block. This
+        method supports both formats and handles multi-answer questions like
+        `ADF`.
         """
 
-        cabody = card_body.find("p", attrs={'class': "card-text question-answer bg-light white-text"})  # correct answers body
+        correct_choices = card_body.select("[data-correct]")
+        if correct_choices:
+            correct_letters = []
+            for choice in correct_choices:
+                letter_tag = choice.find("span", attrs={'class': "multi-choice-letter"})
+                if letter_tag is not None:
+                    letter = self.__clean_string(letter_tag.text)
+                    letter = re.sub(r"[^A-Z]", "", letter.upper())
+                    if letter:
+                        correct_letters.append(letter)
+            if correct_letters:
+                return "".join(correct_letters)
 
-        comm_correct_answer = cabody.find("div", attrs={'class': "vote-bar progress-bar bg-primary"})  # the bar with community answer
-        
-        # in the cases where the community agrees with ExamTopics, there is no community voting bar
-        if comm_correct_answer != None:  
-            correct_answer = comm_correct_answer.text.split(" ")[0]  # vote-bar progress-bar bg-primary
+        cabody = card_body.find("div", attrs={'class': lambda c: c and "question-answer" in c and "bg-light" in c})
+        if cabody is None:
+            cabody = card_body.find("p", attrs={'class': lambda c: c and "question-answer" in c and "bg-light" in c})
+        if cabody is None:
+            raise ValueError(f"Could not locate the answer block for question {self.__get_question_number(card_body)}")
+
+        comm_correct_answer = cabody.find("div", attrs={'class': lambda c: c and "vote-bar" in c and "progress-bar" in c})
+
+        if comm_correct_answer is not None:
+            correct_answer = self.__clean_string(comm_correct_answer.text).split(" ")[0]
         else:
-            correct_answer = cabody.find("span",attrs={'class': "correct-answer"}).text
+            correct_answer_container = cabody.find("strong", attrs={'class': "ml-1"})
+            if correct_answer_container is not None:
+                correct_answer = self.__clean_string(correct_answer_container.text)
+            else:
+                correct_answer_span = cabody.find("span", attrs={'class': "correct-answer"})
+                if correct_answer_span is not None:
+                    correct_answer = self.__clean_string(correct_answer_span.text)
+                else:
+                    raise ValueError(f"Could not determine the correct answer for question {self.__get_question_number(card_body)}")
 
         return correct_answer
 
